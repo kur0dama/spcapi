@@ -1,0 +1,10 @@
+[package]
+name = "spcapi"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+csv = "1.1"
+serde = { version = "1", features = ["derive"] }
+polars = { version = "0.26.1", features = ["lazy", "strings", "temporal", "dynamic_groupby", "timezones"] }
+chrono = "0.4.23"
