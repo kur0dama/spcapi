@@ -6,8 +6,8 @@ mod spccalc;
 mod error;
 
 fn main() {
-    let TEST_DATE_FREQ = "daily";
-    let date_freq = match &*TEST_DATE_FREQ.to_lowercase() {
+    let test_date_freq = "day";
+    let date_freq = match &*test_date_freq.to_lowercase() {
         "day" => Ok(DateFreq::Day),
         "week" => Ok(DateFreq::Week),
         "month" => Ok(DateFreq::Month),
@@ -28,11 +28,11 @@ fn main() {
     };
     match date_freq {
         Ok(date_freq) => {
-            let spc_test = spc.downsample(DateFreq::FiscalYear);
+            let spc_test = spc.downsample(date_freq);
             print!("{}", spc_test.spc_data);
             print!("{:?}", spc_test.spc_freq.unwrap());
         },
-        Err(error) => panic!("{}", error),
+        Err(error) => panic!("{:?}", error),
     }
 
     
