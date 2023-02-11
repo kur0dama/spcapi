@@ -1,6 +1,17 @@
 use polars::prelude::*;
 
 #[derive(Debug, Copy, Clone)]
+pub enum DateFreq {
+    Day,
+    Week,
+    Month,
+    Quarter,
+    Year,
+    FiscalYear,
+}
+
+
+#[derive(Debug, Copy, Clone)]
 pub enum SpcType {
     Xbar,
     P,
@@ -10,12 +21,9 @@ pub enum SpcType {
     MR,
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum DateFreq {
-    Day,
-    Week,
-    Month,
-    Year,
+
+impl SpcType {
+
 }
 
 #[derive(Debug, Clone)]
@@ -66,11 +74,31 @@ impl Spc {
                         closed_window: ClosedWindow::Left,
                         start_by: StartBy::WindowBound,
                     },
+                    DateFreq::Quarter => DynamicGroupOptions {
+                        index_column: "dt".into(), 
+                        every: Duration::parse("3mo"),
+                        period: Duration::parse("3mo"), 
+                        offset: Duration::parse("0s"), 
+                        truncate: false, 
+                        include_boundaries: false, 
+                        closed_window: ClosedWindow::Left,
+                        start_by: StartBy::WindowBound,
+                    },
                     DateFreq::Year => DynamicGroupOptions {
                         index_column: "dt".into(), 
                         every: Duration::parse("1y"),
                         period: Duration::parse("1y"), 
                         offset: Duration::parse("0s"), 
+                        truncate: false, 
+                        include_boundaries: false, 
+                        closed_window: ClosedWindow::Left,
+                        start_by: StartBy::WindowBound,
+                    },
+                    DateFreq::FiscalYear => DynamicGroupOptions {
+                        index_column: "dt".into(), 
+                        every: Duration::parse("1y"),
+                        period: Duration::parse("1y"), 
+                        offset: Duration::parse("6mo"), 
                         truncate: false, 
                         include_boundaries: false, 
                         closed_window: ClosedWindow::Left,

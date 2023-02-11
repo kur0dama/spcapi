@@ -1,29 +1,39 @@
-// use std::error::Error;
-// use std::io;
-// use std::process;
-
-// use serde::Deserialize;
-// use polars::prelude::*;
-// use chrono::{DateTime, Utc};
-
 use spccalc::{Spc, SpcType, DateFreq};
+use error::DateFreqError;
 
 mod spcdata;
 mod spccalc;
+mod error;
 
 fn main() {
+    let TEST_DATE_FREQ = "daily";
+    let date_freq = match &*TEST_DATE_FREQ.to_lowercase() {
+        "day" => Ok(DateFreq::Day),
+        "week" => Ok(DateFreq::Week),
+        "month" => Ok(DateFreq::Month),
+        "quarter" => Ok(DateFreq::Quarter),
+        "year" => Ok(DateFreq::Year),
+        "fiscal_year" => Ok(DateFreq::FiscalYear),
+        _ => Err(DateFreqError)
+    };
     let spc = Spc {
         spc_type: SpcType::Xbar,
         spc_freq: None,
         spc_data: spcdata::load_csv(
-            &"data/data.csv",
-            &"date",
-            &"failures",
-            &"sample_size",
+            "data/data.csv",
+            "date",
+            "failures",
+            "sample_size",
         )
     };
-    let spc_test = spc.downsample(DateFreq::Week);
-    print!("{}", spc_test.spc_data);
-    print!("{:?}", spc_test.spc_freq.unwrap());
+    match date_freq {
+        Ok(date_freq) => {
+            let spc_test = spc.downsample(DateFreq::FiscalYear);
+            print!("{}", spc_test.spc_data);
+            print!("{:?}", spc_test.spc_freq.unwrap());
+        },
+        Err(error) => panic!("{}", error),
+    }
+
     
 }
