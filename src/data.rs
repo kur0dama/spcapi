@@ -69,7 +69,7 @@ impl RequestJson {
             .data
             .clone()
             .iter()
-            .map(|r: &RequestRow| r.clone().try_into_typed_struct().unwrap())
+            .map(|r: &RequestRow| r.try_into_typed_struct().unwrap())
             .collect::<Vec<SpcDataRow>>();
         Ok(
             SpcData {
