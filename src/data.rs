@@ -5,14 +5,11 @@ use std::io::BufReader;
 use std::str::FromStr;
 use serde::Deserialize;
 use rust_decimal::Decimal;
-// use rust_decimal_macros::dec;
 use chrono::NaiveDateTime;
-// use serde_json::Result;
 
 use crate::enums::*;
-// use crate::errors::*;
+use crate::constants::DT_FORMAT;
 
-const DT_FORMAT: &str = "%Y-%m-%dT%H:%M:%S";
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct RequestRow {
@@ -31,10 +28,10 @@ pub struct SpcDataRow {
 impl RequestRow {
 
     pub fn try_into_typed_struct(self: &Self) -> Result<SpcDataRow, Box<dyn Error>> {
-        let dt = NaiveDateTime::parse_from_str(&self.dt, DT_FORMAT)?;
+        let dt = NaiveDateTime::parse_from_str(&self.dt, DT_FORMAT).expect("Invalid date format");
         let n = Decimal::from_str(&self.n)?;
         let w = match &self.w {
-            Some(x) => Some(Decimal::from_str(&x).unwrap()),
+            Some(x) => Some(Decimal::from_str(x).unwrap()),
             None => None,
         };
         let outstruct = SpcDataRow {
@@ -84,7 +81,7 @@ impl RequestJson {
 pub fn get_json_from_file<P: AsRef<Path>>(path: P) -> Result<SpcData, Box<dyn Error>> {
     let f = File::open(path)?;
     let reader = BufReader::new(f);
-    let resp: RequestJson = serde_json::from_reader(reader)?;
+    let resp: RequestJson = serde_json::from_reader(reader).expect("Could not read input JSON");
 
     Ok(resp.try_into_typed_struct().unwrap())
 }

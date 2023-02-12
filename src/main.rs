@@ -7,9 +7,10 @@ mod enums;
 mod data;
 mod errors;
 mod temporal;
+mod constants;
 
-use data::{get_json_from_file};
-use temporal::floor_date;
+use data::{get_json_from_file, SpcDataRow};
+use temporal::{floor_date, DateMap};
 use enums::DateFreq;
 
 
@@ -18,11 +19,17 @@ fn main() {
     match spc_data {
         Ok(resp) => {
             let v = &resp.data;
-            let dfreq = &resp.target_date_freq;
-            let dts = v.iter().map(|s| floor_date(s.dt, *dfreq)).collect::<Vec<NaiveDateTime>>();
-            println!("{} to {}", dts.iter().min().unwrap(), dts.iter().max().unwrap());
-            for row in v[0..3].to_vec().iter() {
-                print!("{:?}, {:?}\n", row, floor_date(row.dt, DateFreq::Week));
+            // let dfreq = &resp.target_date_freq;
+            // let dts = v.iter().map(|s| floor_date(s.dt, *dfreq)).collect::<Vec<NaiveDateTime>>();
+            let dts = v
+                .iter()
+                .map(|s: &SpcDataRow| s.dt)
+                .collect::<Vec<NaiveDateTime>>();
+            let min_date = dts.iter().min().unwrap();
+            let max_date = dts.iter().max().unwrap();
+            let dmap = DateMap::zeroes(*min_date, *max_date, DateFreq::Year);
+            for (k,v) in dmap.0.iter() {
+                println!("{}: {:?}", k, v);
             }
         }
         Err(error) => print!("{:?}", error)

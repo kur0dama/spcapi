@@ -1,11 +1,9 @@
 use chrono::{NaiveDateTime, NaiveDate, NaiveTime, Duration, Datelike, Weekday};
+use rust_decimal::Decimal;
+use std::collections::HashMap;
 
 use crate::enums::DateFreq;
-
-const QTRS_IN_YR: u32 = 4;
-const MONS_IN_QTR: u32 = 3;
-const QTR_OFFSET: u32 = 1;
-const FISCAL_YR_START_MON: u32 = 7;
+use crate::constants::{QTRS_IN_YR, MONS_IN_QTR, QTR_OFFSET, FISCAL_YR_START_MON};
 
 // pub struct DateRange (NaiveDateTime, NaiveDateTime, Duration);
 
@@ -52,4 +50,35 @@ pub fn floor_date(dt: NaiveDateTime, datepart: DateFreq) -> NaiveDateTime {
         },
     }
 
+}
+
+#[derive(Debug, Clone)]
+pub struct DateMapVal {
+    n: Decimal,
+    w: Decimal,
+}
+
+impl DateMapVal {
+    fn zeroes() -> DateMapVal {
+        DateMapVal { n: Decimal::new(0,0), w: Decimal::new(0,0) }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct DateMap (pub HashMap<NaiveDateTime, DateMapVal>);
+impl DateMap {
+    pub fn zeroes(start_dt: NaiveDateTime, end_dt: NaiveDateTime, by: DateFreq) -> DateMap {
+        let mut date_map = DateMap(HashMap::new());
+        let mut start_dt_floor = floor_date(start_dt, by);
+        let end_dt_floor = floor_date(end_dt, by);
+        let dur = by.get_assoc_duration();
+
+        while start_dt_floor <= end_dt_floor {
+            date_map.0.insert(start_dt_floor, DateMapVal::zeroes());
+            start_dt_floor = start_dt_floor + dur;
+        }
+
+        date_map
+
+    }
 }

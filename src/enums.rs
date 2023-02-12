@@ -1,3 +1,5 @@
+use chronoutil::RelativeDuration;
+
 use crate::errors::*;
 
 #[derive(Debug, Copy, Clone)]
@@ -53,6 +55,20 @@ impl TryFrom<&str> for DateFreq {
             "year" => Ok(DateFreq::Year),
             "fiscal_year" => Ok(DateFreq::FiscalYear),
             _ => Err(DateFreqError),
+        }
+    }
+}
+
+impl DateFreq {
+
+    pub fn get_assoc_duration(self: &Self) -> RelativeDuration {
+        match self {
+            DateFreq::Day => RelativeDuration::days(1),
+            DateFreq::Week => RelativeDuration::days(7),
+            DateFreq::Month => RelativeDuration::months(1),
+            DateFreq::Quarter => RelativeDuration::months(3),
+            DateFreq::Year => RelativeDuration::months(12),
+            DateFreq::FiscalYear => RelativeDuration::months(12),
         }
     }
 }
