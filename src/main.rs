@@ -15,8 +15,9 @@ fn main() {
     match spc_data {
         Ok(resp) => {
             let v = &resp.data;
-            let row = v.first().unwrap().clone();
-            print!("{:?}, {:?}", row, row.dt.weekday());
+            for row in v[0..5].to_vec().iter() {
+                print!("{:?}, {:?}\n", row, row.dt.weekday());
+            }
         }
         Err(error) => print!("{:?}", error)
     }
