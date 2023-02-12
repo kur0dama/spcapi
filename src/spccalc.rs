@@ -1,25 +1,14 @@
+// SPC calculations based on arbitrary data
+//
+
 use polars::prelude::*;
 
-#[derive(Debug, Copy, Clone)]
-pub enum DateFreq {
-    Day,
-    Week,
-    Month,
-    Quarter,
-    Year,
-    FiscalYear,
-}
+#[derive(Debug)]
+pub struct DateFreqError;
 
 
-#[derive(Debug, Copy, Clone)]
-pub enum SpcType {
-    Xbar,
-    P,
-    NP,
-    C,
-    U,
-    MR,
-}
+
+
 
 
 impl SpcType {
