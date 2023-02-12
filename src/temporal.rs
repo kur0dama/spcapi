@@ -15,9 +15,7 @@ pub fn floor_date(dt: NaiveDateTime, datepart: DateFreq) -> NaiveDateTime {
             midnight
         ),
         DateFreq::Week => {
-            let isowk = dt.iso_week();
-            let wk = isowk.week();
-            let yr = isowk.year();
+            let (wk, yr) = (dt.iso_week().week(), dt.iso_week().year());
             NaiveDateTime::new(
                 NaiveDate::from_isoywd_opt(yr, wk, Weekday::Mon).unwrap(),
                 midnight
