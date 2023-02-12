@@ -29,17 +29,17 @@ impl RequestRow {
 
     pub fn try_into_typed_struct(self: &Self) -> Result<SpcDataRow, Box<dyn Error>> {
         let dt = NaiveDateTime::parse_from_str(&self.dt, DT_FORMAT).expect("Invalid date format");
-        let n = Decimal::from_str(&self.n)?;
+        let n = Decimal::from_str_exact(&self.n)?;
         let w = match &self.w {
-            Some(x) => Some(Decimal::from_str(x).unwrap()),
+            Some(x) => Some(Decimal::from_str_exact(x).unwrap()),
             None => None,
         };
-        let outstruct = SpcDataRow {
+        let out_struct = SpcDataRow {
             dt: dt,
             n: n,
             w: w,
         };
-        Ok(outstruct)
+        Ok(out_struct)
     }
 }
 

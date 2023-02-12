@@ -19,15 +19,14 @@ fn main() {
     match spc_data {
         Ok(resp) => {
             let v = &resp.data;
-            // let dfreq = &resp.target_date_freq;
-            // let dts = v.iter().map(|s| floor_date(s.dt, *dfreq)).collect::<Vec<NaiveDateTime>>();
-            let dts = v
+            let date_freq = DateFreq::try_from(resp.target_date_freq).unwrap();
+            let date_vec = v
                 .iter()
                 .map(|s: &SpcDataRow| s.dt)
                 .collect::<Vec<NaiveDateTime>>();
-            let min_date = dts.iter().min().unwrap();
-            let max_date = dts.iter().max().unwrap();
-            let dmap = DateMap::zeroes(*min_date, *max_date, DateFreq::Year);
+            let min_date = date_vec.iter().min().unwrap();
+            let max_date = date_vec.iter().max().unwrap();
+            let dmap = DateMap::zeroes(*min_date, *max_date, date_freq);
             for (k,v) in dmap.0.iter() {
                 println!("{}: {:?}", k, v);
             }
