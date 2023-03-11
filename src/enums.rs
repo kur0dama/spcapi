@@ -4,14 +4,14 @@ use crate::errors::*;
 
 #[derive(Debug, Copy, Clone)]
 pub enum SpcType {
-    Xbar,   // sample average
-    P,      // proportion
-    C,      // counts
-    U,      // rate
-    MR,     // moving range
-    I,      // individuals
-    G,      // cases between events
-    T,      // time between events
+    Xbar, // sample average
+    P,    // proportion
+    C,    // counts
+    U,    // rate
+    MR,   // moving range
+    I,    // individuals
+    G,    // cases between events
+    T,    // time between events
 }
 
 impl TryFrom<&str> for SpcType {
@@ -31,7 +31,6 @@ impl TryFrom<&str> for SpcType {
         }
     }
 }
-
 
 #[derive(Debug, Copy, Clone)]
 pub enum DateFreq {
@@ -60,7 +59,6 @@ impl TryFrom<&str> for DateFreq {
 }
 
 impl DateFreq {
-
     pub fn get_assoc_duration(self: &Self) -> RelativeDuration {
         match self {
             DateFreq::Day => RelativeDuration::days(1),

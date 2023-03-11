@@ -1,15 +1,14 @@
-use std::fs::File;
-use std::path::Path;
-use std::error::Error;
-use std::io::BufReader;
-use std::str::FromStr;
-use serde::Deserialize;
-use rust_decimal::Decimal;
 use chrono::NaiveDateTime;
+use rust_decimal::Decimal;
+use serde::Deserialize;
+use std::error::Error;
+use std::fs::File;
+use std::io::BufReader;
+use std::path::Path;
+use std::str::FromStr;
 
-use crate::enums::*;
 use crate::constants::DT_FORMAT;
-
+use crate::enums::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct RequestRow {
@@ -26,7 +25,6 @@ pub struct SpcDataRow {
 }
 
 impl RequestRow {
-
     pub fn try_into_typed_struct(self: &Self) -> Result<SpcDataRow, Box<dyn Error>> {
         let dt = NaiveDateTime::parse_from_str(&self.dt, DT_FORMAT).expect("Invalid date format");
         let n = Decimal::from_str_exact(&self.n)?;
@@ -34,11 +32,7 @@ impl RequestRow {
             Some(x) => Some(Decimal::from_str_exact(x).unwrap()),
             None => None,
         };
-        let out_struct = SpcDataRow {
-            dt: dt,
-            n: n,
-            w: w,
-        };
+        let out_struct = SpcDataRow { dt: dt, n: n, w: w };
         Ok(out_struct)
     }
 }
@@ -58,23 +52,21 @@ pub struct SpcData {
 }
 
 impl RequestJson {
-
     pub fn try_into_typed_struct(self: &Self) -> Result<SpcData, Box<dyn Error>> {
         let spc_type = SpcType::try_from(&*self.spc_type).expect("Invalid SpcType");
-        let target_date_freq = DateFreq::try_from(&*self.target_date_freq).expect("Invalid DateFreq");
+        let target_date_freq =
+            DateFreq::try_from(&*self.target_date_freq).expect("Invalid DateFreq");
         let data = &self
             .data
             .clone()
             .iter()
             .map(|r: &RequestRow| r.try_into_typed_struct().unwrap())
             .collect::<Vec<SpcDataRow>>();
-        Ok(
-            SpcData {
-                spc_type: spc_type,
-                target_date_freq: target_date_freq,
-                data: data.to_vec(),
-            }
-        )
+        Ok(SpcData {
+            spc_type: spc_type,
+            target_date_freq: target_date_freq,
+            data: data.to_vec(),
+        })
     }
 }
 

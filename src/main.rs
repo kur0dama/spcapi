@@ -3,16 +3,15 @@ use chrono::NaiveDateTime;
 // use rust_decimal::Decimal;
 // use rust_decimal_macros::dec;
 
-mod enums;
+mod constants;
 mod data;
+mod enums;
 mod errors;
 mod temporal;
-mod constants;
 
 use data::{get_json_from_file, SpcDataRow};
-use temporal::{floor_date, DateMap};
 use enums::DateFreq;
-
+use temporal::{floor_date, DateMap};
 
 fn main() {
     let spc_data = get_json_from_file("data/data.json");
@@ -27,10 +26,10 @@ fn main() {
             let min_date = date_vec.iter().min().unwrap();
             let max_date = date_vec.iter().max().unwrap();
             let dmap = DateMap::zeroes(*min_date, *max_date, date_freq);
-            for (k,v) in dmap.0.iter() {
+            for (k, v) in dmap.0.iter() {
                 println!("{}: {:?}", k, v);
             }
         }
-        Err(error) => print!("{:?}", error)
+        Err(error) => print!("{:?}", error),
     }
 }

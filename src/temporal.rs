@@ -1,41 +1,40 @@
-use chrono::{NaiveDateTime, NaiveDate, NaiveTime, Duration, Datelike, Weekday};
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime, Weekday};
 use rust_decimal::Decimal;
 use std::collections::HashMap;
 
-use crate::enums::DateFreq;
 use crate::constants::*;
+use crate::enums::DateFreq;
 
 // pub struct DateRange (NaiveDateTime, NaiveDateTime, Duration);
 
 pub fn floor_date(dt: NaiveDateTime, datepart: DateFreq) -> NaiveDateTime {
-    let midnight: NaiveTime = NaiveTime::from_hms_opt(0,0,0).unwrap();
+    let midnight: NaiveTime = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
     match datepart {
         DateFreq::Day => NaiveDateTime::new(
             NaiveDate::from_ymd_opt(dt.year(), dt.month(), dt.day()).unwrap(),
-            midnight
+            midnight,
         ),
         DateFreq::Week => {
             let (wk, yr) = (dt.iso_week().week(), dt.iso_week().year());
             NaiveDateTime::new(
                 NaiveDate::from_isoywd_opt(yr, wk, Weekday::Mon).unwrap(),
-                midnight
+                midnight,
             )
-        },
+        }
         DateFreq::Month => NaiveDateTime::new(
             NaiveDate::from_ymd_opt(dt.year(), dt.month(), 1).unwrap(),
-            midnight
+            midnight,
         ),
         DateFreq::Quarter => {
             let qtr = (dt.month() / QTRS_IN_YR * MONS_IN_QTR) + QTR_OFFSET;
             NaiveDateTime::new(
                 NaiveDate::from_ymd_opt(dt.year(), qtr, 1).unwrap(),
-                midnight
+                midnight,
             )
-        },
-        DateFreq::Year => NaiveDateTime::new(
-            NaiveDate::from_ymd_opt(dt.year(), 1, 1).unwrap(),
-            midnight
-        ),
+        }
+        DateFreq::Year => {
+            NaiveDateTime::new(NaiveDate::from_ymd_opt(dt.year(), 1, 1).unwrap(), midnight)
+        }
         DateFreq::FiscalYear => {
             let fiscal_year = match dt.month() >= FISCAL_YR_START_MON {
                 true => dt.year(),
@@ -43,11 +42,10 @@ pub fn floor_date(dt: NaiveDateTime, datepart: DateFreq) -> NaiveDateTime {
             };
             NaiveDateTime::new(
                 NaiveDate::from_ymd_opt(fiscal_year, FISCAL_YR_START_MON, 1).unwrap(),
-                midnight
+                midnight,
             )
-        },
+        }
     }
-
 }
 
 #[derive(Debug, Clone)]
@@ -58,12 +56,15 @@ pub struct DateMapVal {
 
 impl DateMapVal {
     fn zeroes() -> DateMapVal {
-        DateMapVal { n: Decimal::new(0,0), w: Decimal::new(0,0) }
+        DateMapVal {
+            n: Decimal::new(0, 0),
+            w: Decimal::new(0, 0),
+        }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct DateMap (pub HashMap<NaiveDateTime, DateMapVal>);
+pub struct DateMap(pub HashMap<NaiveDateTime, DateMapVal>);
 impl DateMap {
     pub fn zeroes(start_dt: NaiveDateTime, end_dt: NaiveDateTime, by: DateFreq) -> DateMap {
         let mut date_map = DateMap(HashMap::new());
@@ -77,6 +78,5 @@ impl DateMap {
         }
 
         date_map
-
     }
 }
