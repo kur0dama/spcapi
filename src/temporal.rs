@@ -1,11 +1,10 @@
-use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime, Weekday};
+use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, Weekday};
+use chronoutil::RelativeDuration;
 use rust_decimal::Decimal;
 use std::collections::HashMap;
 
 use crate::constants::*;
 use crate::enums::DateFreq;
-
-// pub struct DateRange (NaiveDateTime, NaiveDateTime, Duration);
 
 pub fn floor_date(dt: NaiveDateTime, datepart: DateFreq) -> NaiveDateTime {
     let midnight: NaiveTime = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
@@ -32,16 +31,18 @@ pub fn floor_date(dt: NaiveDateTime, datepart: DateFreq) -> NaiveDateTime {
                 midnight,
             )
         }
-        DateFreq::Year => {
-            NaiveDateTime::new(NaiveDate::from_ymd_opt(dt.year(), 1, 1).unwrap(), midnight)
-        }
+        DateFreq::Year => NaiveDateTime::new(
+            NaiveDate::from_ymd_opt(dt.year(), 1, 1).unwrap(),
+            midnight,
+        ),
         DateFreq::FiscalYear => {
             let fiscal_year = match dt.month() >= FISCAL_YR_START_MON {
                 true => dt.year(),
                 false => dt.year() - 1,
             };
             NaiveDateTime::new(
-                NaiveDate::from_ymd_opt(fiscal_year, FISCAL_YR_START_MON, 1).unwrap(),
+                NaiveDate::from_ymd_opt(fiscal_year, FISCAL_YR_START_MON, 1)
+                    .unwrap(),
                 midnight,
             )
         }
@@ -66,11 +67,15 @@ impl DateMapVal {
 #[derive(Debug, Clone)]
 pub struct DateMap(pub HashMap<NaiveDateTime, DateMapVal>);
 impl DateMap {
-    pub fn zeroes(start_dt: NaiveDateTime, end_dt: NaiveDateTime, by: DateFreq) -> DateMap {
+    pub fn zeroes(
+        start_dt: NaiveDateTime,
+        end_dt: NaiveDateTime,
+        by: DateFreq,
+    ) -> DateMap {
         let mut date_map = DateMap(HashMap::new());
         let mut start_dt_floor = floor_date(start_dt, by);
         let end_dt_floor = floor_date(end_dt, by);
-        let dur = by.get_assoc_duration();
+        let dur: RelativeDuration = by.into();
 
         while start_dt_floor <= end_dt_floor {
             date_map.0.insert(start_dt_floor, DateMapVal::zeroes());

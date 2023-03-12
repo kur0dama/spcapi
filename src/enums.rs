@@ -1,6 +1,6 @@
 use chronoutil::RelativeDuration;
 
-use crate::errors::*;
+use crate::errors::SpcDataError;
 
 #[derive(Debug, Copy, Clone)]
 pub enum SpcType {
@@ -15,9 +15,9 @@ pub enum SpcType {
 }
 
 impl TryFrom<&str> for SpcType {
-    type Error = SpcTypeError;
+    type Error = SpcDataError;
 
-    fn try_from(value: &str) -> Result<Self, SpcTypeError> {
+    fn try_from(value: &str) -> Result<Self, SpcDataError> {
         match value {
             "xbar" => Ok(SpcType::Xbar),
             "p" => Ok(SpcType::P),
@@ -27,7 +27,7 @@ impl TryFrom<&str> for SpcType {
             "i" => Ok(SpcType::I),
             "g" => Ok(SpcType::G),
             "t" => Ok(SpcType::T),
-            _ => Err(SpcTypeError),
+            _ => Err(SpcDataError::InvalidSpcType(value.into())),
         }
     }
 }
@@ -43,9 +43,9 @@ pub enum DateFreq {
 }
 
 impl TryFrom<&str> for DateFreq {
-    type Error = DateFreqError;
+    type Error = SpcDataError;
 
-    fn try_from(value: &str) -> Result<Self, DateFreqError> {
+    fn try_from(value: &str) -> Result<Self, SpcDataError> {
         match value {
             "day" => Ok(DateFreq::Day),
             "week" => Ok(DateFreq::Week),
@@ -53,13 +53,13 @@ impl TryFrom<&str> for DateFreq {
             "quarter" => Ok(DateFreq::Quarter),
             "year" => Ok(DateFreq::Year),
             "fiscal_year" => Ok(DateFreq::FiscalYear),
-            _ => Err(DateFreqError),
+            _ => Err(SpcDataError::InvalidDateFreq(value.into())),
         }
     }
 }
 
-impl DateFreq {
-    pub fn get_assoc_duration(self: &Self) -> RelativeDuration {
+impl Into<RelativeDuration> for DateFreq {
+    fn into(self) -> RelativeDuration {
         match self {
             DateFreq::Day => RelativeDuration::days(1),
             DateFreq::Week => RelativeDuration::days(7),
@@ -69,4 +69,11 @@ impl DateFreq {
             DateFreq::FiscalYear => RelativeDuration::months(12),
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum JsonDataState<T, E> {
+    PresentValid(T),
+    PresentInvalid(E),
+    NotPresent,
 }

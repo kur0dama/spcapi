@@ -1,40 +1,21 @@
 use chrono::NaiveDateTime;
 use rust_decimal::Decimal;
 use serde::Deserialize;
-use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
+use std::ops::Deref;
 use std::path::Path;
-use std::str::FromStr;
 
 use crate::constants::DT_FORMAT;
+use crate::enums::JsonDataState;
 use crate::enums::*;
+use crate::errors::{DataRowError, FileLoadError, SpcDataError};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct RequestRow {
     pub dt: String,
     pub n: String,
     pub w: Option<String>,
-}
-
-#[derive(Debug, Clone)]
-pub struct SpcDataRow {
-    pub dt: NaiveDateTime,
-    pub n: Decimal,
-    pub w: Option<Decimal>,
-}
-
-impl RequestRow {
-    pub fn try_into_typed_struct(self: &Self) -> Result<SpcDataRow, Box<dyn Error>> {
-        let dt = NaiveDateTime::parse_from_str(&self.dt, DT_FORMAT).expect("Invalid date format");
-        let n = Decimal::from_str_exact(&self.n)?;
-        let w = match &self.w {
-            Some(x) => Some(Decimal::from_str_exact(x).unwrap()),
-            None => None,
-        };
-        let out_struct = SpcDataRow { dt: dt, n: n, w: w };
-        Ok(out_struct)
-    }
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -45,35 +26,110 @@ pub struct RequestJson {
 }
 
 #[derive(Debug, Clone)]
+pub struct SpcDataRow {
+    pub dt: NaiveDateTime,
+    pub n: Decimal,
+    pub w: Option<Decimal>,
+}
+
+impl TryFrom<&RequestRow> for SpcDataRow {
+    type Error = DataRowError;
+    fn try_from(row: &RequestRow) -> Result<Self, DataRowError> {
+        let dt = NaiveDateTime::parse_from_str(&row.dt, DT_FORMAT);
+        let n = Decimal::from_str_exact(&row.n);
+        let w = match &row.w {
+            Some(x) => {
+                let parsed_w = Decimal::from_str_exact(x);
+                if parsed_w.is_err() {
+                    JsonDataState::PresentInvalid(parsed_w.unwrap_err())
+                } else {
+                    JsonDataState::PresentValid(parsed_w.unwrap())
+                }
+            }
+            None => JsonDataState::NotPresent,
+        };
+        match (dt, n, w) {
+            (Err(_), _, _) => Err(DataRowError::InvalidDateField(row.dt.to_owned())),
+            (_, Err(_), _) => Err(DataRowError::InvalidDecimalField(row.n.to_owned())),
+            (_, _, JsonDataState::PresentInvalid(_)) => Err(DataRowError::InvalidDecimalField(
+                row.w
+                    .as_ref()
+                    .unwrap()
+                    .to_owned(),
+            )),
+            (Ok(dt), Ok(n), JsonDataState::PresentValid(w)) => Ok(SpcDataRow {
+                dt: dt,
+                n: n,
+                w: Some(w),
+            }),
+            (Ok(dt), Ok(n), JsonDataState::NotPresent) => Ok(SpcDataRow {
+                dt: dt,
+                n: n,
+                w: None,
+            }),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct SpcData {
     pub spc_type: SpcType,
     pub target_date_freq: DateFreq,
     pub data: Vec<SpcDataRow>,
 }
 
-impl RequestJson {
-    pub fn try_into_typed_struct(self: &Self) -> Result<SpcData, Box<dyn Error>> {
-        let spc_type = SpcType::try_from(&*self.spc_type).expect("Invalid SpcType");
-        let target_date_freq =
-            DateFreq::try_from(&*self.target_date_freq).expect("Invalid DateFreq");
-        let data = &self
+impl TryFrom<&RequestJson> for SpcData {
+    type Error = SpcDataError;
+    fn try_from(request: &RequestJson) -> Result<Self, SpcDataError> {
+        let spc_type_opt = SpcType::try_from(request.spc_type.deref());
+        let target_date_freq_opt = DateFreq::try_from(
+            request
+                .target_date_freq
+                .deref(),
+        );
+        let data_opt = request
             .data
             .clone()
             .iter()
-            .map(|r: &RequestRow| r.try_into_typed_struct().unwrap())
-            .collect::<Vec<SpcDataRow>>();
-        Ok(SpcData {
-            spc_type: spc_type,
-            target_date_freq: target_date_freq,
-            data: data.to_vec(),
-        })
+            .map(|row| SpcDataRow::try_from(row))
+            .collect::<Vec<Result<_, _>>>();
+        let failed_rows_top5 = data_opt
+            .iter()
+            .filter(|row| row.is_err())
+            .take(5)
+            .map(|row| row.clone().unwrap_err())
+            .collect::<Vec<DataRowError>>();
+        let some_rows_failed: bool = failed_rows_top5.len() > 0;
+        match (spc_type_opt, target_date_freq_opt, some_rows_failed) {
+            (Err(e), _, _) => Err(e),
+            (_, Err(e), _) => Err(e),
+            (_, _, true) => Err(SpcDataError::InvalidDataRow(failed_rows_top5)),
+            (Ok(spc_type), Ok(target_date_freq), false) => Ok(SpcData {
+                spc_type: spc_type,
+                target_date_freq: target_date_freq,
+                data: data_opt
+                    .iter()
+                    .map(|row| row.clone().unwrap())
+                    .collect::<Vec<SpcDataRow>>(),
+            }),
+        }
+        //
     }
 }
 
-pub fn get_json_from_file<P: AsRef<Path>>(path: P) -> Result<SpcData, Box<dyn Error>> {
-    let f = File::open(path)?;
-    let reader = BufReader::new(f);
-    let resp: RequestJson = serde_json::from_reader(reader).expect("Could not read input JSON");
-
-    Ok(resp.try_into_typed_struct().unwrap())
+pub fn get_json_from_file(path: &Path) -> Result<RequestJson, FileLoadError> {
+    let f: Result<File, std::io::Error> = File::open(path);
+    if f.is_err() {
+        let path_str = match path.to_str() {
+            Some(p) => p.to_owned(),
+            None => "".to_owned(),
+        };
+        return Err(FileLoadError::FileNotFound(path_str));
+    }
+    let reader = BufReader::new(f.unwrap());
+    let resp: Result<RequestJson, serde_json::Error> = serde_json::from_reader(reader);
+    match resp {
+        Ok(x) => Ok(x),
+        Err(_) => Err(FileLoadError::InvalidJson),
+    }
 }
