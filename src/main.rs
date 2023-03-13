@@ -5,9 +5,11 @@ mod constants;
 mod data;
 mod enums;
 mod errors;
+mod load;
 mod temporal;
 
-use data::{get_json_from_file, SpcData, SpcDataRow};
+use data::SpcData;
+use load::get_json_from_file;
 use temporal::DateMap;
 
 fn main() {

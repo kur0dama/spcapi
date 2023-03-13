@@ -1,15 +1,6 @@
 use std::error::Error;
 use std::fmt::{Display, Error as FmtError, Formatter};
 
-#[derive(Debug)]
-pub struct DateFreqError;
-
-#[derive(Debug)]
-pub struct SpcTypeError;
-
-#[derive(Debug)]
-pub struct InvalidRowError;
-
 #[derive(Debug, Clone)]
 pub enum DataRowError {
     InvalidDateField(String),
