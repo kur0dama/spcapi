@@ -4,7 +4,6 @@ use serde::Deserialize;
 use std::ops::Deref;
 
 use crate::constants::DT_FORMAT;
-use crate::enums::JsonDataState;
 use crate::enums::*;
 use crate::errors::{DataRowError, SpcDataError};
 

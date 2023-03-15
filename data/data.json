@@ -1,6 +1,6 @@
 {
     "spc_type": "xbar",
-    "target_date_freq": "year",
+    "target_date_freq": "quarter",
     "data": [
         {
             "dt": "2012-01-01T00:00:00",

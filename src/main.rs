@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use std::path::Path;
 
 mod constants;
@@ -19,18 +18,10 @@ fn main() {
         return;
     }
     let spc_data_opt = SpcData::try_from(&request_json_opt.unwrap());
-    match spc_data_opt {
-        Ok(spc_data) => {
-            let inner_data = &spc_data.data;
-            let date_freq = &spc_data.target_date_freq;
-            let date_vec = inner_data
-                .iter()
-                .map(|s| s.dt)
-                .collect::<Vec<NaiveDateTime>>();
-            let min_date = date_vec.iter().min().unwrap();
-            let max_date = date_vec.iter().max().unwrap();
-            let dmap = DateMap::zeroes(*min_date, *max_date, *date_freq);
-            for (k, v) in dmap.0.iter() {
+    let date_map_opt = DateMap::try_from(&spc_data_opt.unwrap());
+    match date_map_opt {
+        Ok(date_map) => {
+            for (k, v) in date_map.0.iter() {
                 println!("{}: {:?}", k, v);
             }
         }
