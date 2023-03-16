@@ -108,7 +108,6 @@ impl TryFrom<&SpcData> for DateMap {
                         Some(w) => date_map_val.w += w,
                         None => (),
                     };
-                    ()
                 }
                 None => (),
             }

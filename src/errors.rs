@@ -5,6 +5,7 @@ use std::fmt::{Display, Error as FmtError, Formatter};
 pub enum DataRowError {
     InvalidDateField(String),
     InvalidDecimalField(String),
+    ZeroDenominatorField,
 }
 
 impl Error for DataRowError {}
@@ -18,6 +19,10 @@ impl Display for DataRowError {
                 s
             ),
             Self::InvalidDecimalField(s) => write!(f, "Value '{}' is not valid numeric value", s),
+            Self::ZeroDenominatorField => write!(
+                f,
+                "Found a 'w' field with value zero; if provided, weights should be non-zero"
+            ),
         }
     }
 }

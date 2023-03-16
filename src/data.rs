@@ -53,11 +53,14 @@ impl TryFrom<&RequestRow> for SpcDataRow {
                     .unwrap()
                     .to_owned(),
             )),
-            (Ok(dt), Ok(n), JsonDataState::PresentValid(w)) => Ok(SpcDataRow {
-                dt: dt,
-                n: n,
-                w: Some(w),
-            }),
+            (Ok(dt), Ok(n), JsonDataState::PresentValid(w)) => match w.mantissa() {
+                0_i128 => Err(DataRowError::ZeroDenominatorField),
+                _ => Ok(SpcDataRow {
+                    dt: dt,
+                    n: n,
+                    w: Some(w),
+                }),
+            },
             (Ok(dt), Ok(n), JsonDataState::NotPresent) => Ok(SpcDataRow {
                 dt: dt,
                 n: n,
