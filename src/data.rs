@@ -3,7 +3,7 @@ use rust_decimal::Decimal;
 use serde::Deserialize;
 use std::ops::Deref;
 
-use crate::constants::DT_FORMAT;
+use crate::constants;
 use crate::enums::*;
 use crate::errors::{DataRowError, SpcDataError};
 
@@ -31,7 +31,7 @@ pub struct SpcDataRow {
 impl TryFrom<&RequestRow> for SpcDataRow {
     type Error = DataRowError;
     fn try_from(row: &RequestRow) -> Result<Self, DataRowError> {
-        let dt = NaiveDateTime::parse_from_str(&row.dt, DT_FORMAT);
+        let dt = NaiveDateTime::parse_from_str(&row.dt, constants::DT_FORMAT);
         let n = Decimal::from_str_exact(&row.n);
         let w = match &row.w {
             Some(x) => {
@@ -93,17 +93,17 @@ impl TryFrom<&RequestJson> for SpcData {
             .enumerate()
             .map(|(i, row)| (i, SpcDataRow::try_from(row)))
             .collect::<Vec<(usize, Result<_, _>)>>();
-        let failed_rows_top5 = data_opt
+        let failed_rows_top_n = data_opt
             .iter()
             .filter(|row| row.1.is_err())
-            .take(5)
+            .take(constants::NUM_ROW_ERRORS_DISP)
             .map(|(i, result)| (*i + 1, result.clone().unwrap_err()))
             .collect::<Vec<(usize, DataRowError)>>();
-        let some_rows_failed: bool = failed_rows_top5.len() > 0;
+        let some_rows_failed: bool = failed_rows_top_n.len() > 0;
         match (spc_type_opt, target_date_freq_opt, some_rows_failed) {
             (Err(e), _, _) => Err(e),
             (_, Err(e), _) => Err(e),
-            (_, _, true) => Err(SpcDataError::InvalidDataRows(failed_rows_top5)),
+            (_, _, true) => Err(SpcDataError::InvalidDataRows(failed_rows_top_n)),
             (Ok(spc_type), Ok(target_date_freq), false) => Ok(SpcData {
                 spc_type: spc_type,
                 target_date_freq: target_date_freq,

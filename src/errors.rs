@@ -1,3 +1,4 @@
+use crate::constants;
 use std::error::Error;
 use std::fmt::{Display, Error as FmtError, Formatter};
 
@@ -46,9 +47,14 @@ impl Display for SpcDataError {
                 write!(f, "DateFreq '{}' is not valid", s)
             }
             Self::InvalidDataRows(ev) => {
-                writeln!(f, "Found {} invalid data rows, showing first 5:", ev.len())?;
+                writeln!(
+                    f,
+                    "Found {} invalid data rows, showing first {}:",
+                    ev.len(),
+                    constants::NUM_ROW_ERRORS_DISP
+                )?;
                 for (i, e) in ev {
-                    write!(f, "  [Row {}] {}\n", i, e)?;
+                    write!(f, " - [Row {}] {}\n", i, e)?;
                 }
                 Ok(())
             }
