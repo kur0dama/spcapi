@@ -21,7 +21,7 @@ impl Display for DataRowError {
             Self::InvalidDecimalField(s) => write!(f, "Value '{}' is not valid numeric value", s),
             Self::ZeroDenominatorField => write!(
                 f,
-                "Found a 'w' field with value zero; if provided, weights should be non-zero"
+                "'w' field has zero value; if provided, weights should be non-zero"
             ),
         }
     }
@@ -31,7 +31,7 @@ impl Display for DataRowError {
 pub enum SpcDataError {
     InvalidSpcType(String),
     InvalidDateFreq(String),
-    InvalidDataRow(Vec<DataRowError>),
+    InvalidDataRows(Vec<(usize, DataRowError)>),
 }
 
 impl Error for SpcDataError {}
@@ -45,10 +45,10 @@ impl Display for SpcDataError {
             Self::InvalidDateFreq(s) => {
                 write!(f, "DateFreq '{}' is not valid", s)
             }
-            Self::InvalidDataRow(ev) => {
+            Self::InvalidDataRows(ev) => {
                 writeln!(f, "Found {} invalid data rows, showing first 5:", ev.len())?;
-                for e in ev {
-                    write!(f, " - Invalid data row: {}\n", e)?;
+                for (i, e) in ev {
+                    write!(f, "  [Row {}] {}\n", i, e)?;
                 }
                 Ok(())
             }

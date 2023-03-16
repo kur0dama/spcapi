@@ -90,25 +90,26 @@ impl TryFrom<&RequestJson> for SpcData {
             .data
             .clone()
             .iter()
-            .map(|row| SpcDataRow::try_from(row))
-            .collect::<Vec<Result<_, _>>>();
+            .enumerate()
+            .map(|(i, row)| (i, SpcDataRow::try_from(row)))
+            .collect::<Vec<(usize, Result<_, _>)>>();
         let failed_rows_top5 = data_opt
             .iter()
-            .filter(|row| row.is_err())
+            .filter(|row| row.1.is_err())
             .take(5)
-            .map(|row| row.clone().unwrap_err())
-            .collect::<Vec<DataRowError>>();
+            .map(|(i, result)| (*i + 1, result.clone().unwrap_err()))
+            .collect::<Vec<(usize, DataRowError)>>();
         let some_rows_failed: bool = failed_rows_top5.len() > 0;
         match (spc_type_opt, target_date_freq_opt, some_rows_failed) {
             (Err(e), _, _) => Err(e),
             (_, Err(e), _) => Err(e),
-            (_, _, true) => Err(SpcDataError::InvalidDataRow(failed_rows_top5)),
+            (_, _, true) => Err(SpcDataError::InvalidDataRows(failed_rows_top5)),
             (Ok(spc_type), Ok(target_date_freq), false) => Ok(SpcData {
                 spc_type: spc_type,
                 target_date_freq: target_date_freq,
                 data: data_opt
                     .iter()
-                    .map(|row| row.clone().unwrap())
+                    .map(|row| row.1.clone().unwrap())
                     .collect::<Vec<SpcDataRow>>(),
             }),
         }
