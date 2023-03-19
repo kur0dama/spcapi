@@ -17,11 +17,13 @@ fn main() {
         println!("{}", request_json_opt.unwrap_err());
         std::process::exit(exitcode::USAGE);
     }
+
     let spc_data_opt = SpcData::try_from(&request_json_opt.unwrap());
     if spc_data_opt.is_err() {
         println!("{}", spc_data_opt.unwrap_err());
         std::process::exit(exitcode::USAGE);
     }
+
     let date_map_opt = DateMap::try_from(&spc_data_opt.unwrap());
     match date_map_opt {
         Ok(date_map) => {

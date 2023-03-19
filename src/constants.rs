@@ -13,13 +13,16 @@ pub const FISCAL_YR_START_MON: u32 = 7;
 pub const DT_FORMAT: &str = "%Y-%m-%dT%H:%M:%S";
 
 // SPC CONSTANTS
-enum SpcConst {
+#[derive(Debug, Clone)]
+pub enum SpcConst {
     D2,
     C4,
     D3,
     D4,
 }
-struct SpcConstTblRow {
+
+#[derive(Debug, Clone)]
+pub struct SpcConstTblRow {
     d2: &'static str,
     c4: &'static str,
     d3: &'static str,
@@ -37,19 +40,23 @@ impl SpcConstTblRow {
         }
     }
 
-    pub fn dec(self: &Self, const_name: SpcConst) -> Decimal {
-        let const_str = match const_name {
+    pub fn get(self: &Self, const_name: SpcConst) -> &str {
+        match const_name {
             SpcConst::D2 => self.d2,
             SpcConst::C4 => self.c4,
             SpcConst::D3 => self.d3,
             SpcConst::D4 => self.d4,
-        };
+        }
+    }
+
+    pub fn dec(self: &Self, const_name: SpcConst) -> Decimal {
+        let const_str = self.get(const_name);
         Decimal::from_str_exact(const_str).unwrap()
     }
 }
 
 lazy_static!{
-    static ref SPC_CONST_TBL: HashMap<i8, SpcConstTblRow> = {
+    pub static ref SPC_CONST_TBL: HashMap<i8, SpcConstTblRow> = {
         let mut hmap = HashMap::new();
         hmap.insert(2, SpcConstTblRow::new("1.1284", "0.7979", "0.8525", "0.9539"));
         hmap.insert(3, SpcConstTblRow::new("1.6926", "0.8862", "0.8884", "1.5878"));
@@ -83,5 +90,5 @@ lazy_static!{
         hmap
     };
 
-    static ref SPC_MR_CONST: Decimal = SPC_CONST_TBL.get(&2).unwrap().dec(SpcConst::D2);
+    pub static ref SPC_MR_CONST: Decimal = SPC_CONST_TBL.get(&2).unwrap().dec(SpcConst::D2);
 }
