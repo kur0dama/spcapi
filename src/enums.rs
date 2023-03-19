@@ -5,10 +5,11 @@ use crate::errors::SpcDataError;
 #[derive(Debug, Copy, Clone)]
 pub enum SpcType {
     Xbar, // sample average
+    Xmr,  // X moving range
     P,    // proportion
     C,    // counts
     U,    // rate
-    MR,   // moving range
+    Mr,   // moving range
     I,    // individuals
     G,    // cases between events
     T,    // time between events
@@ -20,10 +21,11 @@ impl TryFrom<&str> for SpcType {
     fn try_from(value: &str) -> Result<Self, SpcDataError> {
         match value {
             "xbar" => Ok(SpcType::Xbar),
+            "xmr" => Ok(SpcType::Xmr),
             "p" => Ok(SpcType::P),
             "c" => Ok(SpcType::C),
             "u" => Ok(SpcType::U),
-            "mr" => Ok(SpcType::MR),
+            "mr" => Ok(SpcType::Mr),
             "i" => Ok(SpcType::I),
             "g" => Ok(SpcType::G),
             "t" => Ok(SpcType::T),
